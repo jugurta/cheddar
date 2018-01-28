@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.commands">
+      <category
+            name="Sample Category"
+            id="ubo.plugin.cheddar.commands.category">
+      </category>
+      <command
+            name="Sample Command"
+            categoryId="ubo.plugin.cheddar.commands.category"
+            id="ubo.plugin.cheddar.commands.sampleCommand">
+      </command>
+       <super type="org.osate.aadl2.modelsupport.AadlObjectMarker"/>
+   </extension>
+   
+   
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            commandId="ubo.plugin.cheddar.commands.sampleCommand"
+            class="ubo.plugin.cheddar.handlers.CheddarLaunch">
+            <enabledWhen>
+            <or>
+               <reference
+                     definitionId="org.osate.core.isInstanceFileSelected">
+               </reference>
+               <with
+                     variable="selection">
+                  <and>
+                     <count
+                           value="1">
+                     </count>
+                     <iterate>
+                        <instanceof
+                              value="org.osate.aadl2.instance.SystemInstance">
+                        </instanceof>
+                     </iterate>
+                  </and>
+               </with>
+            </or>
+         </enabledWhen>         
+      </handler>
+       <super type="org.osate.aadl2.modelsupport.AadlObjectMarker"/>
+   </extension>
+   
+   <extension point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+         <toolbar id="ubo.plugin.cheddar.toolbars.sampleToolbar">
+            <command
+                  commandId="ubo.plugin.cheddar.commands.sampleCommand"
+                  icon="icons/sample.png"
+                  tooltip="Cheddar Plugin"
+                  id="ubo.plugin.cheddar.toolbars.sampleCommand">
+            </command>
+         </toolbar>
+      </menuContribution>
+   </extension>
+</plugin>
