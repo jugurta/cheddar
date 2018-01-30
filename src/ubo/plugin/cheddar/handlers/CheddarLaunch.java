@@ -53,9 +53,10 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
 
 		try {
-			String response=new Util().features(si);
-			Dialog.showInfo("Ferhat Touahria", "Fichier XML généré chemin: \n "+ response);
-		} catch (Exception e) {
+			String response = new Util().features(si);
+
+			Dialog.showInfo("Ferhat Touahria", "Fichier XML généré chemin: \n " + response);
+		} catch (IOException e) {
 			Dialog.showError("Erreur fichier", "Ecriture échouée");
 		}
 
