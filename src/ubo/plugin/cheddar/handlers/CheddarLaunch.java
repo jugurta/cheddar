@@ -1,5 +1,6 @@
 package ubo.plugin.cheddar.handlers;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -51,7 +52,12 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
 
-		Dialog.showWarning("Ferhat Touahria", Util.features(si));
+		try {
+			String response=Util.features(si);
+			Dialog.showInfo("Ferhat Touahria", "Fichier XML généré chemin: "+ response);
+		} catch (IOException e) {
+			Dialog.showError("Erreur fichier", "Ecriture échouée");
+		}
 
 	}
 
