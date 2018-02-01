@@ -39,11 +39,11 @@ public abstract class Resource extends SoftwareComponent {
 	protected String cpu_name;
 	protected String addressSpaceName;
 
-	public Resource(String id,String name,  int state, int size, int address, String cpuName, String addressSpaceName,
+	public Resource(String id,String name,  int state, int size, int address, String cpu_name, String address_space_name,
 			Critical_Section critical_section[]) throws VariableValueException {
 		super(id,name,Objects_Type.RESOURCE_OBJECT_TYPE);
-		isValid.isValidIdentifier(cpuName);
-		isValid.isValidIdentifier(addressSpaceName);
+		isValid.isValidIdentifier(cpu_name);
+		isValid.isValidIdentifier(address_space_name);
 		
 		if(critical_section!=null)
 		this.critical_section = critical_section;
@@ -65,8 +65,8 @@ public abstract class Resource extends SoftwareComponent {
 		else
 			this.address = address;
 
-		this.cpu_name = cpuName;
-		this.addressSpaceName = addressSpaceName;
+		this.cpu_name = cpu_name;
+		this.addressSpaceName = address_space_name;
 	}
 
 	@Override

@@ -14,7 +14,7 @@ import com.model.exceptions.VariableValueException;
 public class Np_Resource extends Resource{
 
 	public Np_Resource(String id,String name,  int state, int size, int address, String cpuName,
-			String addressSpaceName, Critical_Section[] critical_section, String[] taskNames) throws VariableValueException {
+			String addressSpaceName, Critical_Section[] critical_section) throws VariableValueException {
 		super(id,name, state, size, address, cpuName, addressSpaceName, critical_section);
 		
 		super.protocol=Protocol.NO_PROTOCOL;

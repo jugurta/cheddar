@@ -1,9 +1,11 @@
 package com.model.others;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 import com.model.dependencies.Dependency;
 import com.model.exceptions.VariableValueException;
@@ -135,12 +137,12 @@ public class Cheddar {
 	{	
 		String chemin="";
 		String XML=this.toXML();
-        BufferedWriter out = new BufferedWriter(new FileWriter(file+".xml"));
+		new File("Cheddar/").mkdir();
+        BufferedWriter out = new BufferedWriter(new FileWriter("Cheddar/"+file+".xml"));
 		try {
-			
 			out.write(XML);
 	        out.close();
-	        chemin=new File(file+".xml").getAbsolutePath();
+	        chemin=new File("Cheddar/"+file+".xml").getAbsolutePath();
 		} catch (IOException e) {	
 			e.printStackTrace();
 		}
@@ -149,5 +151,6 @@ public class Cheddar {
         
 	}
 	
+
 
 }
