@@ -4,12 +4,10 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 
-import org.osate.aadl2.*;
 import org.osate.aadl2.instance.SystemInstance;
 import org.osate.aadl2.instance.ComponentInstance;
 import org.osate.aadl2.instance.ConnectionInstance;
 import org.osate.aadl2.instance.FeatureInstance;
-import org.osate.aadl2.instance.InstanceObject;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 
 import com.model.dependencies.Dependency;
@@ -26,9 +24,6 @@ import com.model.others.Scheduling_Parameters;
 import com.model.processors.Core;
 import com.model.processors.Mono_Core_Processor;
 import com.model.processors.Multi_Core_Processor;
-import com.model.resources.Critical_Section;
-import com.model.resources.Np_Resource;
-import com.model.resources.PCP_Resource;
 import com.model.resources.Resource;
 import com.model.processors.Processor;
 import com.model.tasks.Aperiodic_Task;
@@ -113,13 +108,9 @@ public class Util {
 		int capacity;
 		int deadline;
 		int priority;
-		int text_memory_size;
-		int stack_memory_size;
 		int period;
-		int context_switch_overhead = 0;
 		int start_time = 0;
-		int criticality = 0;
-		int jitter = 0;
+
 		int blocking_time = 0;
 		// Cheddar System Components
 
@@ -135,7 +126,6 @@ public class Util {
 			case THREAD:
 				try {
 					String name = component.getName();
-
 					capacity = (int) GetProperties.getMaximumComputeExecutionTimeinMs(component);
 					deadline = (int) GetProperties.getDeadlineinMilliSec(component);
 					priority = (int) GetProperties.getPriority(component, 0);
@@ -147,14 +137,15 @@ public class Util {
 					this.threadCount--;
 
 				} catch (VariableValueException e) {
-					// TODO Auto-generated catch block
+					
 					e.printStackTrace();
 				}
 
-				for (FeatureInstance feat : component.getFeatureInstances())
-
-					for (ConnectionInstance conn : feat.getDstConnectionInstances()) {
-						array_critical.add(new Critical_AADL(conn.getSource().getName(), component.getName(),
+				for (FeatureInstance featureInstance : component.getFeatureInstances())
+						
+					for (ConnectionInstance connection : featureInstance.getDstConnectionInstances()) {
+						response+=connection.getFullName();
+						array_critical.add(new Critical_AADL(connection.getSource().getName(), component.getName(),
 								(int) GetProperties.getMaximumComputeExecutionTimeinMs(component)));
 
 					}
@@ -172,6 +163,7 @@ public class Util {
 							new Scheduling_Parameters(
 									converterFromString(GetProperties.getSchedulingProtocol(component)), 0,
 									Preemptive_type.PREEMPTIVE, 0, 0, 1, null, 0));
+					this.processCount--;
 				} catch (VariableValueException e) {
 					e.printStackTrace();
 				}
@@ -193,24 +185,18 @@ public class Util {
 			Processor processor = createProcessor(cpu_name, cores);
 			AddressSpace addressSpace = createAddressSpace(address_space_name, processor.getName());
 			Resource[] resources = new Resource[array_resource_aadl.size()];
-
+			Dependency dependencies[] = null;
 			// Instanciating resources from the AADL
 			int state = 1;
 			int address = 0;
 			for (int i = 0; i < array_resource_aadl.size(); i++) {
-
 				resources[i] = array_resource_aadl.get(i).toCheddarResource(state, 2, address, cpu_name,
 						address_space_name, 1, priority_assignement);
-
 			}
 
 			// Instanciating Cheddar Model and writing the XML File
-			if ((resources != null) && (resources.length > 0))
-				response = new Cheddar(cores, processor, transformArrayAddress(addressSpace), tasks, resources)
-						.WriteXML("cheddarpluginV2");
-			else
-				response = new Cheddar(cores, processor, transformArrayAddress(addressSpace), tasks)
-						.WriteXML("cheddarpluginV1");
+			response = new Cheddar(cores, processor, transformArrayAddress(addressSpace), tasks, dependencies, resources)
+					.WriteXML("cheddarpluginV1");
 
 		} catch (VariableValueException e) {
 
@@ -251,6 +237,13 @@ public class Util {
 
 	}
 
+	/**
+	 * 
+	 * @param cpu_name
+	 * @param cores
+	 * @return
+	 * @throws VariableValueException
+	 */
 	private Processor createProcessor(String cpu_name, Core... cores) throws VariableValueException {
 		String identifier = "id_cpu";
 		Processor processor;
@@ -269,6 +262,27 @@ public class Util {
 
 	}
 
+	/**
+	 * 
+	 * @param dispatch_protocol
+	 * @param name
+	 * @param cpu_name
+	 * @param address_space_name
+	 * @param capacity
+	 * @param deadline
+	 * @param start_time
+	 * @param priority
+	 * @param blocking_time
+	 * @param policy
+	 * @param text_memory_size
+	 * @param stack_memory_size
+	 * @param criticality
+	 * @param context_switch_overhead
+	 * @param period
+	 * @param jitter
+	 * @return
+	 * @throws VariableValueException
+	 */
 	private Task createTask(String dispatch_protocol, String name, String cpu_name, String address_space_name,
 			int capacity, int deadline, int start_time, int priority, int blocking_time, Policy policy,
 			int text_memory_size, int stack_memory_size, int criticality, int context_switch_overhead, int period,
@@ -296,6 +310,13 @@ public class Util {
 		return task;
 	}
 
+	/**
+	 * 
+	 * @param address_space_name
+	 * @param cpu_name
+	 * @return
+	 * @throws VariableValueException
+	 */
 	private AddressSpace createAddressSpace(String address_space_name, String cpu_name) throws VariableValueException {
 		return new AddressSpace("id_3", address_space_name, cpu_name, new Scheduling_Parameters(
 				Scheduler_Type.NO_SCHEDULING_PROTOCOL, 0, Preemptive_type.PREEMPTIVE, 0, 0, 0, null, 0), 0, 0, 0, 0);

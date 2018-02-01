@@ -106,7 +106,7 @@ public class Cheddar {
 			xml += task.toXML();
 
 		xml += "</tasks>\n";
-
+		if(this.resources!=null)
 		if (this.resources.length > 0) {
 			xml += "<resources>\n";
 
