@@ -33,8 +33,6 @@ import com.model.tasks.Task;
 import ubo.aadl.model.Critical_AADL;
 import ubo.aadl.model.Resource_AADL;
 
-import org.osate.xtext.aadl2.properties.util.InstanceModelUtil;
-
 /**
  * 
  * @author Jugurtha
@@ -125,7 +123,7 @@ public class Util {
 			switch (component.getCategory()) {
 			case THREAD:
 				try {
-					String name = component.getName();
+					String name = component.getFullName().toString();
 					capacity = (int) GetProperties.getMaximumComputeExecutionTimeinMs(component);
 					deadline = (int) GetProperties.getDeadlineinMilliSec(component);
 					priority = (int) GetProperties.getPriority(component, 0);
@@ -137,14 +135,13 @@ public class Util {
 					this.threadCount--;
 
 				} catch (VariableValueException e) {
-					
+
 					e.printStackTrace();
 				}
 
 				for (FeatureInstance featureInstance : component.getFeatureInstances())
-						
+
 					for (ConnectionInstance connection : featureInstance.getDstConnectionInstances()) {
-						response+=connection.getFullName();
 						array_critical.add(new Critical_AADL(connection.getSource().getName(), component.getName(),
 								(int) GetProperties.getMaximumComputeExecutionTimeinMs(component)));
 
@@ -195,12 +192,43 @@ public class Util {
 			}
 
 			// Instanciating Cheddar Model and writing the XML File
-			response = new Cheddar(cores, processor, transformArrayAddress(addressSpace), tasks, dependencies, resources)
-					.WriteXML("cheddarpluginV1");
+			response = new Cheddar(cores, processor, transformArrayAddress(addressSpace), tasks, dependencies,
+					resources).WriteXML("cheddarpluginV1");
 
 		} catch (VariableValueException e) {
 
 			e.printStackTrace();
+		}
+
+		return response;
+
+	}
+
+	public String Connection(SystemInstance si) throws IOException {
+		String response = "";
+		// Counting devices
+		parse(si);
+
+		for (ComponentInstance component : si.getAllComponentInstances()) {
+			switch (component.getCategory()) {
+			case THREAD:
+
+				break;
+			case DATA:
+
+				response += "\n" + component.getName() + "\n";
+				response += "\n" + GetProperties.getConnectionTiming(component).getName();
+				response += "\n" + GetProperties.getRequiredConnection(component);
+				response += "\n" + GetProperties.getProvidedConnectionQualityOfService(component);
+				break;
+			case PROCESS:
+				break;
+			case PROCESSOR:
+				break;
+			default:
+				break;
+			}
+
 		}
 
 		return response;

@@ -1,31 +1,28 @@
 package ubo.plugin.cheddar.handlers;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.window.Window;
+
 import org.osate.aadl2.*;
 import org.osate.aadl2.instance.SystemInstance;
 import org.osate.aadl2.instance.ComponentInstance;
-import org.osate.aadl2.instance.FeatureInstance;
-import org.osate.aadl2.instance.InstanceObject;
 import org.osate.ui.dialogs.Dialog;
 import org.osate.ui.handlers.AaxlReadOnlyHandlerAsJob;
 
 import com.jugurta.Launch;
 
-/**
- * Our sample handler extends AbstractHandler, an IHandler base class.
- * 
- * @see org.eclipse.core.commands.IHandler
- * @see org.eclipse.core.commands.AbstractHandler
- */
+
 public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
-	
+
+	public final static String cheddarPath = "cheddar  ";
+
 	@Override
 	public String getMarkerType() {
-		return "org.osate.analysis.resource.budgets.CheddarLaunch";
+		return "org.osate.CheddarLaunch";
 	}
 
 	@Override
@@ -47,24 +44,19 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 	public final void doAaxlAction(final IProgressMonitor monitor, final Element obj) {
 
 		if (!(obj instanceof ComponentInstance)) {
-			
-			Dialog.showError("Erreur fichier", "Ce n'est pas le bon fichier");
+			Dialog.showError("Error", "The selected file is not at the right format");
 			monitor.done();
 			return;
 		}
-		
+
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
-		
 		try {
 			String response = new Util().features(si);
-			
-			
-		//	Dialog.showInfo("Ferhat Touahria", "Fichier XML généré chemin: \n " + response);
-			
-			 new Launch().executeCommand("cheddar " + response);
-			
+			Dialog.showInfo("Info", "The XML file is generated on the path : \n " + response);
+			String log_info = WriteLog(new Launch().executeCommand(cheddarPath + response));
+			Dialog.showInfo("Info", "The Log file is generated on the path : \n " + log_info);
 		} catch (IOException e) {
-			Dialog.showError("Erreur fichier", "Ecriture échouée");
+			Dialog.showError("Error ", "Error when writing the file");
 		}
 
 	}
@@ -72,7 +64,23 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 	public void invoke(IProgressMonitor monitor, SystemInstance root) {
 		actionBody(monitor, root);
 	}
-	
-	
-	
+
+	private String WriteLog(String Logcontent) throws IOException {
+		String directory_name = "Logs/";
+		String log_filename = "log.txt";
+		String path = "";
+		new File(directory_name).mkdir();
+		BufferedWriter out = new BufferedWriter(new FileWriter(directory_name + log_filename));
+
+		try {
+			out.write(Logcontent);
+			out.close();
+			path = new File(directory_name + log_filename).getAbsolutePath();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return path;
+	}
+
 }

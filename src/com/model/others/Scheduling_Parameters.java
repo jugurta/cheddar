@@ -2,7 +2,6 @@ package com.model.others;
 
 import com.model.enumerations.Preemptive_type;
 import com.model.enumerations.Scheduler_Type;
-import com.model.exceptions.VariableValueException;
 
 public class Scheduling_Parameters {
 
