@@ -4,7 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.lang.System;
+import java.lang.Thread;
 import org.eclipse.core.runtime.IProgressMonitor;
 
 import org.osate.aadl2.*;
@@ -14,7 +15,6 @@ import org.osate.ui.dialogs.Dialog;
 import org.osate.ui.handlers.AaxlReadOnlyHandlerAsJob;
 
 import com.jugurta.Launch;
-
 
 public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 
@@ -51,11 +51,20 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
 		try {
+
 			String response = new Util().features(si);
-			Dialog.showInfo("Info", "The XML file is generated on the path : \n " + response);
-			String log_info = WriteLog(new Launch().executeCommand(cheddarPath + response));
-			Dialog.showInfo("Info", "The Log file is generated on the path : \n " + log_info);
+			System.out.println("The XML file is generated on the path :  " + response);
+
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					String log_info = WriteLog(new Launch().executeCommand(cheddarPath + response));
+					System.out.println("The Log file is generated on the path : " + log_info);
+				}
+			}).start();
+
 		} catch (IOException e) {
+			System.err.println("Error when writing the file");
 			Dialog.showError("Error ", "Error when writing the file");
 		}
 
@@ -65,20 +74,28 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 		actionBody(monitor, root);
 	}
 
-	private String WriteLog(String Logcontent) throws IOException {
+	private String WriteLog(String Logcontent) {
+
 		String directory_name = "Logs/";
 		String log_filename = "log.txt";
 		String path = "";
-		new File(directory_name).mkdir();
-		BufferedWriter out = new BufferedWriter(new FileWriter(directory_name + log_filename));
+		new Thread(new Runnable() {
 
-		try {
-			out.write(Logcontent);
-			out.close();
-			path = new File(directory_name + log_filename).getAbsolutePath();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			@Override
+			public void run() {
+				new File(directory_name).mkdir();
+
+				try {
+					BufferedWriter out = new BufferedWriter(new FileWriter(directory_name + log_filename));
+					out.write(Logcontent);
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+
+		path = new File(directory_name + log_filename).getAbsolutePath();
 
 		return path;
 	}

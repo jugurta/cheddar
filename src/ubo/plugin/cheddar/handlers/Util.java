@@ -86,7 +86,7 @@ public class Util {
 			}
 		}
 		return "Threads: " + threadCount + "\n" + "Process: " + processCount + "\n" + "Processor: " + processorCount
-				+ "\n" + "Memory :" + memoryCount + "\n" + "Bus : " + busCount + "\n" + "Device :" + deviceCount;
+				+ "\n" +"Data: " +dataCount+"Memory :" + memoryCount + "\n" + "Bus : " + busCount + "\n" + "Device :" + deviceCount;
 	}
 
 	public String features(SystemInstance si) throws IOException {
