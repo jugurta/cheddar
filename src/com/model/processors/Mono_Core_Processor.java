@@ -16,13 +16,13 @@ import com.model.exceptions.VariableValueException;
  */
 public class Mono_Core_Processor extends Processor{
 
-	private String coreId;
+	private Core core;
 	
 	
-	public Mono_Core_Processor(String id,String name, String coreId,Migration_Type migration_type) throws VariableValueException {	
+	public Mono_Core_Processor(String id,String name, Core core,Migration_Type migration_type) throws VariableValueException {	
 		super(id,name,migration_type);
-		if(coreId==null) throw new VariableValueException("Cores must not be empty");
-		this.coreId=coreId;
+		if(core==null) throw new VariableValueException("Cores must not be empty");
+		this.core=core;
 		
 	}
 	
@@ -35,7 +35,7 @@ public class Mono_Core_Processor extends Processor{
 				+"<name>" +super.name+ "</name>\n"
 				+"<processor_type>"+Processor_Type.MONOCORE_TYPE+ "</processor_type>\n"
 				+"<migration_type>"+super.migration_type+"</migration_type>\n"
-				+"<core ref=\""+coreId+"\">\n"
+				+"<core ref=\""+core.getId()+"\">\n"
 				+"</core>\n"
 				+"</mono_core_processor>\n" + 
 				"</processors>\n"

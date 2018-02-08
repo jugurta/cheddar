@@ -18,7 +18,7 @@ import com.jugurta.Launch;
 
 public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 
-	public final static String cheddarPath = "cheddar  ";
+	public final static String cheddarPath = "cheddar.exe  ";
 
 	@Override
 	public String getMarkerType() {
@@ -51,6 +51,8 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
 		try {
+
+			// Dialog.showError("Error ", new Util().Connection(si));
 
 			String response = new Util().features(si);
 			System.out.println("The XML file is generated on the path :  " + response);

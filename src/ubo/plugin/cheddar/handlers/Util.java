@@ -86,7 +86,8 @@ public class Util {
 			}
 		}
 		return "Threads: " + threadCount + "\n" + "Process: " + processCount + "\n" + "Processor: " + processorCount
-				+ "\n" +"Data: " +dataCount+"Memory :" + memoryCount + "\n" + "Bus : " + busCount + "\n" + "Device :" + deviceCount;
+				+ "\n" + "Data: " + dataCount + "Memory :" + memoryCount + "\n" + "Bus : " + busCount + "\n"
+				+ "Device :" + deviceCount;
 	}
 
 	public String features(SystemInstance si) throws IOException {
@@ -216,12 +217,27 @@ public class Util {
 				break;
 			case DATA:
 
-				response += "\n" + component.getName() + "\n";
-				response += "\n" + GetProperties.getConnectionTiming(component).getName();
-				response += "\n" + GetProperties.getRequiredConnection(component);
-				response += "\n" + GetProperties.getProvidedConnectionQualityOfService(component);
 				break;
 			case PROCESS:
+				response += "\n" + component.getName() + "\n";/*
+				response += GetProperties.getAllowedDispatchProtocol(component)+"\n";
+				response += GetProperties.getConnectionTiming(component).getName()+"\n";
+				for (ConnectionInstance connectionInstance : component.getConnectionInstances()) {
+					response += connectionInstance.getName()+"\n";
+				}
+				for (FeatureInstance featureInstance:component.getFeatureInstances())
+					response+=featureInstance.getName()+"\n";
+				
+				 */
+				for (ComponentInstance comp:component.getAllComponentInstances())
+				{
+					response+=comp.getFullName()+"\n";
+					
+				}
+				
+				for (ConnectionInstance connectionInstance : component.getConnectionInstances()) {
+					response += connectionInstance.getName()+"\n";
+				}
 				break;
 			case PROCESSOR:
 				break;
@@ -282,8 +298,8 @@ public class Util {
 
 		processor = (this.processorCount > 1)
 				? new Multi_Core_Processor(identifier, cpu_name, Migration_Type.NO_MIGRATION_TYPE,
-						Processor_Type.IDENTICAL_MULTICORES_TYPE, coreIds)
-				: new Mono_Core_Processor(identifier, cpu_name, cores[cores.length - 1].getId(),
+						Processor_Type.IDENTICAL_MULTICORES_TYPE, cores)
+				: new Mono_Core_Processor(identifier, cpu_name, cores[cores.length - 1],
 						Migration_Type.NO_MIGRATION_TYPE);
 		;
 		return processor;

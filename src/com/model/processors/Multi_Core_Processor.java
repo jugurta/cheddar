@@ -17,23 +17,23 @@ import com.model.exceptions.VariableValueException;
 public class Multi_Core_Processor extends Processor {
 	
 	private Processor_Type processor_type;
-	private String coreIds[];
+	private Core cores[];
 	
 	public Multi_Core_Processor(String id,String name,Migration_Type migration_type , Processor_Type processor_type,
-			String ...coreIds) throws VariableValueException {
+			Core ...cores) throws VariableValueException {
 		super(id,name,migration_type);
 		
 		super.migration_type=migration_type;
 		this.processor_type=processor_type;
 		
-		int size=coreIds.length;
+		int size=cores.length;
 		if(size<2)
 			throw new VariableValueException("There must be at least 2 cores");
 		else 
 		{
-		this.coreIds= new String[size];
+		this.cores= new Core[size];
 		for (int i=0;i<size;i++)
-			this.coreIds[i]=coreIds[i];
+			this.cores[i]=cores[i];
 		}
 		}
 	
@@ -48,8 +48,8 @@ public class Multi_Core_Processor extends Processor {
 				+"<migration_type>"+super.migration_type+"</migration_type>\n"
 				+"<cores>\n"
 				;
-		for (int i=0;i<this.coreIds.length;i++)
-			xml+="\t<core ref=\"" +coreIds[i]+"\"/>\n";
+		for (int i=0;i<this.cores.length;i++)
+			xml+="\t<core ref=\"" +cores[i].getId()+"\"/>\n";
 		
 		xml+="</cores>\n"
 			 +"</multi_cores_processor>\n"
