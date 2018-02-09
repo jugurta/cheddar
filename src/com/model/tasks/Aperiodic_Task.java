@@ -28,7 +28,7 @@ public class Aperiodic_Task  extends Task{
 
 	@Override
 	public String toXML() {
-		String xml="<aperiodic_task id=\""+super.id+"\"\n"
+		String xml="<aperiodic_task id=\""+super.id+"\">\n"
 					+"<object_type>"+ super.object_type+"</object_type>\n"
 					+"<name>"+super.name+"</name>\n"
 					+"<task_type>"+super.task_type  +"</task_type>\n"

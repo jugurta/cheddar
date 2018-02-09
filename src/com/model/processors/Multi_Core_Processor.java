@@ -49,7 +49,7 @@ public class Multi_Core_Processor extends Processor {
 				+"<cores>\n"
 				;
 		for (int i=0;i<this.cores.length;i++)
-			xml+="\t<core ref=\"" +cores[i].getId()+"\"/>\n";
+			xml+="\t<core_unit ref=\"" +cores[i].getId()+"\"/>\n";
 		
 		xml+="</cores>\n"
 			 +"</multi_cores_processor>\n"

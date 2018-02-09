@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import org.osate.aadl2.instance.SystemInstance;
 import org.osate.aadl2.instance.ComponentInstance;
 import org.osate.aadl2.instance.ConnectionInstance;
+import org.osate.aadl2.instance.ConnectionInstanceEnd;
+import org.osate.aadl2.instance.ConnectionKind;
 import org.osate.aadl2.instance.FeatureInstance;
 import org.osate.xtext.aadl2.properties.util.GetProperties;
 
@@ -156,12 +158,13 @@ public class Util {
 				break;
 			case PROCESSOR:
 				try {
-					cores[this.processorCount - 1] = new Core("id" + component.getName(), component.getName(),
-							(float) GetProperties.getProcessorMIPS(component),
+					cores[this.processorCount - 1] = new Core(
+							"id" + (this.processorCount - 1) + component.getName() + (this.processorCount - 1),
+							"core_unit_cheddar.impl.instancied_"+component.getName(), (float) GetProperties.getProcessorMIPS(component),
 							new Scheduling_Parameters(
 									converterFromString(GetProperties.getSchedulingProtocol(component)), 0,
 									Preemptive_type.PREEMPTIVE, 0, 0, 1, null, 0));
-					this.processCount--;
+					this.processorCount--;
 				} catch (VariableValueException e) {
 					e.printStackTrace();
 				}
@@ -209,7 +212,8 @@ public class Util {
 		String response = "";
 		// Counting devices
 		parse(si);
-
+		Core cores[] = new Core[this.processorCount];
+		response+=cores.length+"\n";
 		for (ComponentInstance component : si.getAllComponentInstances()) {
 			switch (component.getCategory()) {
 			case THREAD:
@@ -219,27 +223,23 @@ public class Util {
 
 				break;
 			case PROCESS:
-				response += "\n" + component.getName() + "\n";/*
-				response += GetProperties.getAllowedDispatchProtocol(component)+"\n";
-				response += GetProperties.getConnectionTiming(component).getName()+"\n";
+
+				response += GetProperties.getDataSizeInBytes(component) + "\n";
 				for (ConnectionInstance connectionInstance : component.getConnectionInstances()) {
-					response += connectionInstance.getName()+"\n";
+					response += connectionInstance.getName() + "\n";
+					String[] array = connectionInstance.getName().split("->");
+					// response+=array[0].split(".")[0]+" "+ array[1].split(".")[0]+"\n";
+					response += GetProperties.getConnectionTiming(connectionInstance.getComponentInstance()).getName()
+							+ "\n";
+					ConnectionInstanceEnd srcFI = connectionInstance.getSource();
+					response += srcFI.getQualifiedName();
+					response += "\n" + connectionInstance.getKind().getName();
+
 				}
-				for (FeatureInstance featureInstance:component.getFeatureInstances())
-					response+=featureInstance.getName()+"\n";
-				
-				 */
-				for (ComponentInstance comp:component.getAllComponentInstances())
-				{
-					response+=comp.getFullName()+"\n";
-					
-				}
-				
-				for (ConnectionInstance connectionInstance : component.getConnectionInstances()) {
-					response += connectionInstance.getName()+"\n";
-				}
+
 				break;
 			case PROCESSOR:
+				response+=component.getName()+"\n";
 				break;
 			default:
 				break;
@@ -291,17 +291,13 @@ public class Util {
 	private Processor createProcessor(String cpu_name, Core... cores) throws VariableValueException {
 		String identifier = "id_cpu";
 		Processor processor;
-		String coreIds[] = new String[cores.length];
-
-		for (int i = 0; i < cores.length; i++)
-			coreIds[i] = cores[i].getId();
-
-		processor = (this.processorCount > 1)
-				? new Multi_Core_Processor(identifier, cpu_name, Migration_Type.NO_MIGRATION_TYPE,
+		
+		processor = (cores.length> 1)
+				? new Multi_Core_Processor(identifier, cpu_name, Migration_Type.JOB_LEVEL_MIGRATION_TYPE,
 						Processor_Type.IDENTICAL_MULTICORES_TYPE, cores)
 				: new Mono_Core_Processor(identifier, cpu_name, cores[cores.length - 1],
 						Migration_Type.NO_MIGRATION_TYPE);
-		;
+		
 		return processor;
 
 	}

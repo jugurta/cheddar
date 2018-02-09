@@ -52,8 +52,8 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
 		try {
 
-			// Dialog.showError("Error ", new Util().Connection(si));
-
+			Dialog.showError("Error ", new Util().Connection(si));
+			Dialog.showInfo("Components", new Util().parse(si));
 			String response = new Util().features(si);
 			System.out.println("The XML file is generated on the path :  " + response);
 
