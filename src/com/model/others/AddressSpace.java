@@ -57,6 +57,10 @@ public class AddressSpace extends SoftwareComponent {
 		this.heap_memory_size = heap_memory_size;
 	}
 	
+	public String getCpuName()
+	{
+		return this.cpu_Name;
+	}
 	@Override
 	public String toXML() {
 	String xml="<address_space id=\""+super.id +"\">\n"

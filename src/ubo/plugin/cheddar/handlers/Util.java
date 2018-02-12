@@ -32,7 +32,7 @@ import com.model.tasks.Periodic_Task;
 import com.model.tasks.Task;
 
 import ubo.aadl.model.Critical_AADL;
-import ubo.aadl.model.Processor_AADL;
+import ubo.aadl.model.Dependency_AADL;
 import ubo.aadl.model.Resource_AADL;
 
 /**
@@ -46,89 +46,52 @@ public class Util {
 	private int threadCount = 0;
 	private int processCount = 0;
 	private int processorCount = 0;
-	private int busCount = 0;
-	private int deviceCount = 0;
-	private int memoryCount = 0;
 	private int dataCount = 0;
-
-	public String parse(SystemInstance si) {
-
-		this.threadCount = 0;
-		this.processCount = 0;
-		this.processorCount = 0;
-		this.memoryCount = 0;
-		this.busCount = 0;
-		this.dataCount = 0;
-		this.deviceCount = 0;
-		for (ComponentInstance component : si.getAllComponentInstances()) {
-			switch (component.getCategory()) {
-			case THREAD:
-				threadCount++;
-				break;
-			case PROCESS:
-				processCount++;
-				break;
-			case PROCESSOR:
-				processorCount++;
-				break;
-			case MEMORY:
-				memoryCount++;
-				break;
-			case BUS:
-				busCount++;
-				break;
-			case DATA:
-				dataCount++;
-				break;
-			case DEVICE:
-				deviceCount++;
-				break;
-			default:
-				break;
-			}
-		}
-		return "Threads: " + threadCount + "\n" + "Process: " + processCount + "\n" + "Processor: " + processorCount
-				+ "\n" + "Data: " + dataCount + "Memory :" + memoryCount + "\n" + "Bus : " + busCount + "\n"
-				+ "Device :" + deviceCount;
-	}
 
 	public String toCheddar(SystemInstance si) throws VariableValueException, IOException {
 
+		String path = "";
+		// Counting devices
 		parse(si);
-		String response = "";
+
+		// Declaring Components
+
 		Core cores[] = new Core[this.processorCount];
 		Processor processors[] = new Processor[this.processorCount];
 		Task tasks[] = new Task[this.threadCount];
 		Resource resources[] = new Resource[this.dataCount];
+		AddressSpace addressSpaces[] = new AddressSpace[this.processorCount];
 
 		ArrayList<Critical_AADL> array_critical = new ArrayList<>();
+		ArrayList<Dependency_AADL> array_dependency_aadl = new ArrayList<>();
 
 		final Priority_Assignement priority_assignement = Priority_Assignement.AUTOMATIC_ASSIGNMENT;
 		final Policy policy = Policy.SCHED_FIFO;
 
-		AddressSpace addressSpaces[] = new AddressSpace[this.processorCount];
-
+		// Getting the processors from the EMV
 		for (ComponentInstance component : si.getAllComponentInstances()) {
 			switch (component.getCategory()) {
 			case PROCESSOR:
-				cores[this.processCount - 1] = new Core("id_core_" + component.getName(),
+				cores[this.processorCount - 1] = new Core("id_core_" + component.getName(),
 						"core_unit_cheddar.impl.instancied_" + component.getName(),
 						(float) GetProperties.getProcessorMIPS(component),
 						new Scheduling_Parameters(converterFromString(GetProperties.getSchedulingProtocol(component)),
 								0, Preemptive_type.PREEMPTIVE, 0, 0, 1, null, 0));
 				processors[this.processorCount - 1] = new Mono_Core_Processor("id_cpu", component.getName(),
-						cores[this.processCount - 1], Migration_Type.NO_MIGRATION_TYPE);
+						cores[this.processorCount - 1], Migration_Type.NO_MIGRATION_TYPE);
 				this.processorCount--;
+
 				break;
 			default:
 				break;
 			}
 
 		}
-
+		// Creating the adressSpaces for each processor
 		for (int i = 0; i < addressSpaces.length; i++)
 			addressSpaces[i] = createAddressSpace("id_address_" + i, "cheddar_impl_addr_" + i, processors[i].getName());
 
+		// Creating the Tasks
 		for (ComponentInstance component : si.getAllComponentInstances()) {
 			switch (component.getCategory()) {
 			case THREAD:
@@ -139,15 +102,22 @@ public class Util {
 				int period = (int) GetProperties.getPeriodinMS(component);
 				;
 
-				tasks[this.threadCount - 1] = createTask(GetProperties.getDispatchProtocol(component).getName(), name,
-						GetProperties.getBoundProcessor(component).getName(), addressSpaces[0].getName(), capacity,
-						deadline, 0, priority, 0, policy, 0, 0, 0, 0, period, 0);
+				tasks[this.threadCount - 1] = createTask(this.threadCount - 1,
+						GetProperties.getDispatchProtocol(component).getName(), name,
+						GetProperties.getBoundProcessor(component).getName(),
+						getAddressSpaceFromProcessor(GetProperties.getBoundProcessor(component).getName(),
+								addressSpaces),
+						capacity, deadline, 0, priority, 0, policy, 0, 0, 0, 0, period, 0);
 				this.threadCount--;
 
 				for (FeatureInstance featureInstance : component.getFeatureInstances()) {
 					for (ConnectionInstance connection : featureInstance.getDstConnectionInstances()) {
 						array_critical.add(new Critical_AADL(connection.getSource().getName(), component.getName(),
 								(int) GetProperties.getMaximumComputeExecutionTimeinMs(component)));
+						// Getting the dataports
+						array_dependency_aadl.add(new Dependency_AADL(connection.getFullName(),
+								GetProperties.getConnectionTiming(connection).getName()));
+
 					}
 				}
 
@@ -158,6 +128,8 @@ public class Util {
 
 		}
 
+		// Creating the shared data resources
+
 		for (ComponentInstance component : si.getAllComponentInstances()) {
 			switch (component.getCategory()) {
 			case DATA:
@@ -165,20 +137,23 @@ public class Util {
 				int address = 0;
 				resources[this.dataCount - 1] = new Resource_AADL(component.getName(),
 						GetProperties.getConcurrencyControlProtocol(component),
-						array_critical.toArray(new Critical_AADL[array_critical.size()])).
-						toCheddarResource(state, 2,address, 
-						GetProperties.getBoundProcessor(component).getName(),
-						addressSpaces[0].getName(), 1, priority_assignement);
+						array_critical.toArray(new Critical_AADL[array_critical.size()])).toCheddarResource(state, 2,
+								address, GetProperties.getBoundProcessor(component).getName(),
+								addressSpaces[0].getName(), 1, priority_assignement);
 				this.dataCount--;
 				break;
 			default:
 				break;
 			}
 		}
+		// Creating the dependencies
+		Dependency[] dependencies = new Dependency[array_dependency_aadl.size()];
+		for (int i = 0; i < dependencies.length; i++)
+			dependencies[i] = array_dependency_aadl.get(i).toCheddarDependency(tasks);
 
-		response = new Cheddar(cores, processors, addressSpaces, tasks, resources).WriteXML("jugo");
+		path = new Cheddar(cores, processors, addressSpaces, tasks, dependencies, resources).WriteXML("jugo");
 
-		return response;
+		return path;
 	}
 
 	public String features(SystemInstance si) throws IOException {
@@ -221,9 +196,9 @@ public class Util {
 					priority = (int) GetProperties.getPriority(component, 0);
 					period = (int) GetProperties.getPeriodinMS(component);
 
-					tasks[this.threadCount - 1] = createTask(GetProperties.getDispatchProtocol(component).getName(),
-							name, cpu_name, address_space_name, capacity, deadline, start_time, priority, blocking_time,
-							policy, 0, 0, 0, 0, period, 0);
+					tasks[this.threadCount - 1] = createTask(this.threadCount - 1,
+							GetProperties.getDispatchProtocol(component).getName(), name, cpu_name, address_space_name,
+							capacity, deadline, start_time, priority, blocking_time, policy, 0, 0, 0, 0, period, 0);
 					this.threadCount--;
 
 				} catch (VariableValueException e) {
@@ -285,56 +260,14 @@ public class Util {
 						address_space_name, 1, priority_assignement);
 			}
 			Processor[] processor_array = { processor };
+			AddressSpace[] arrayAdress= {addressSpace};
 			// Instanciating Cheddar Model and writing the XML File
-			response = new Cheddar(cores, processor_array, transformArrayAddress(addressSpace), tasks, dependencies,
+			response = new Cheddar(cores, processor_array, arrayAdress, tasks, dependencies,
 					resources).WriteXML("cheddarpluginV1");
 
 		} catch (VariableValueException e) {
 
 			e.printStackTrace();
-		}
-
-		return response;
-
-	}
-
-	public String Connection(SystemInstance si) throws IOException {
-		String response = "";
-		// Counting devices
-		parse(si);
-		Core cores[] = new Core[this.processorCount];
-		response += cores.length + "\n";
-		for (ComponentInstance component : si.getAllComponentInstances()) {
-			switch (component.getCategory()) {
-			case THREAD:
-
-				break;
-			case DATA:
-
-				break;
-			case PROCESS:
-
-				response += GetProperties.getDataSizeInBytes(component) + "\n";
-				for (ConnectionInstance connectionInstance : component.getConnectionInstances()) {
-					response += connectionInstance.getName() + "\n";
-					// String[] array = connectionInstance.getName().split("->");
-					// response+=array[0].split(".")[0]+" "+ array[1].split(".")[0]+"\n";
-					response += GetProperties.getConnectionTiming(connectionInstance.getComponentInstance()).getName()
-							+ "\n";
-					ConnectionInstanceEnd srcFI = connectionInstance.getSource();
-					response += srcFI.getQualifiedName();
-					response += "\n" + connectionInstance.getKind().getName();
-
-				}
-
-				break;
-			case PROCESSOR:
-				response += component.getName() + "\n";
-				break;
-			default:
-				break;
-			}
-
 		}
 
 		return response;
@@ -371,13 +304,16 @@ public class Util {
 
 	}
 
-	/**
-	 * 
-	 * @param cpu_name
-	 * @param cores
-	 * @return
-	 * @throws VariableValueException
-	 */
+	private String getAddressSpaceFromProcessor(String cpu_name, AddressSpace[] address_spaces) {
+		String address_space_name = "";
+		for (AddressSpace address_space : address_spaces)
+			address_space_name = (cpu_name.equals(address_space.getCpuName())) ? address_space.getName()
+					: address_space_name;
+
+		return address_space_name;
+
+	}
+
 	private Processor createProcessor(String cpu_name, Core... cores) throws VariableValueException {
 		String identifier = "id_cpu";
 		Processor processor;
@@ -392,28 +328,8 @@ public class Util {
 
 	}
 
-	/**
-	 * 
-	 * @param dispatch_protocol
-	 * @param name
-	 * @param cpu_name
-	 * @param address_space_name
-	 * @param capacity
-	 * @param deadline
-	 * @param start_time
-	 * @param priority
-	 * @param blocking_time
-	 * @param policy
-	 * @param text_memory_size
-	 * @param stack_memory_size
-	 * @param criticality
-	 * @param context_switch_overhead
-	 * @param period
-	 * @param jitter
-	 * @return
-	 * @throws VariableValueException
-	 */
-	private Task createTask(String dispatch_protocol, String name, String cpu_name, String address_space_name,
+	
+private Task createTask(int i, String dispatch_protocol, String name, String cpu_name, String address_space_name,
 			int capacity, int deadline, int start_time, int priority, int blocking_time, Policy policy,
 			int text_memory_size, int stack_memory_size, int criticality, int context_switch_overhead, int period,
 			int jitter) throws VariableValueException {
@@ -421,17 +337,17 @@ public class Util {
 
 		switch (dispatch_protocol) {
 		case "Periodic":
-			task = new Periodic_Task("id_task_period", name, cpu_name, address_space_name, capacity, deadline,
+			task = new Periodic_Task("id_task_period_" + i, name, cpu_name, address_space_name, capacity, deadline,
 					start_time, priority, blocking_time, policy, text_memory_size, stack_memory_size, criticality,
 					context_switch_overhead, period, jitter);
 			break;
 		case "Aperiodic":
-			task = new Aperiodic_Task("id_task_aperiod", name, cpu_name, address_space_name, capacity, deadline,
+			task = new Aperiodic_Task("id_task_aperiod_" + i, name, cpu_name, address_space_name, capacity, deadline,
 					start_time, priority, blocking_time, policy, text_memory_size, stack_memory_size, criticality,
 					context_switch_overhead);
 			break;
 		default:
-			task = new Periodic_Task("id_task_period", name, cpu_name, address_space_name, capacity, deadline,
+			task = new Periodic_Task("id_task_period_" + i, name, cpu_name, address_space_name, capacity, deadline,
 					start_time, priority, blocking_time, policy, text_memory_size, stack_memory_size, criticality,
 					context_switch_overhead, period, jitter);
 			break;
@@ -440,13 +356,7 @@ public class Util {
 		return task;
 	}
 
-	/**
-	 * 
-	 * @param address_space_name
-	 * @param cpu_name
-	 * @return
-	 * @throws VariableValueException
-	 */
+	
 	private AddressSpace createAddressSpace(String id, String address_space_name, String cpu_name)
 			throws VariableValueException {
 		return new AddressSpace(id, address_space_name, cpu_name, new Scheduling_Parameters(
@@ -454,8 +364,31 @@ public class Util {
 
 	}
 
-	private AddressSpace[] transformArrayAddress(AddressSpace... addressSpaces) {
-		return addressSpaces;
-	}
+	public void parse(SystemInstance si) {
+
+		this.threadCount = 0;
+		this.processCount = 0;
+		this.processorCount = 0;
+		this.dataCount = 0;
+		
+		for (ComponentInstance component : si.getAllComponentInstances()) {
+			switch (component.getCategory()) {
+			case THREAD:
+				threadCount++;
+				break;
+			case PROCESS:
+				processCount++;
+				break;
+			case PROCESSOR:
+				processorCount++;
+				break;
+			case DATA:
+				dataCount++;
+				break;
+			default:
+				break;
+			}
+		}
+	}	
 
 }
