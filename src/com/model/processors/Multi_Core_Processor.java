@@ -40,8 +40,7 @@ public class Multi_Core_Processor extends Processor {
 	
 	@Override
 	public String toXML() {
-		String xml="<processors>\n"
-				+"<multi_cores_processor id=\""+super.id+"\">\n"
+		String xml="<multi_cores_processor id=\""+super.id+"\">\n"
 				+"<object_type>"+super.object_type+ "</object_type>\n"
 				+"<name>"+super.name+"</name>\n"
 				+"<processor_type>"+this.processor_type+"</processor_type>\n"
@@ -52,9 +51,7 @@ public class Multi_Core_Processor extends Processor {
 			xml+="\t<core_unit ref=\"" +cores[i].getId()+"\"/>\n";
 		
 		xml+="</cores>\n"
-			 +"</multi_cores_processor>\n"
-			 +"</processors>\n"
-				;
+			 +"</multi_cores_processor>\n";
 		return xml;
 	}
 

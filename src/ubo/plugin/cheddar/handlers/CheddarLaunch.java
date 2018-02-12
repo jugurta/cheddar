@@ -15,6 +15,7 @@ import org.osate.ui.dialogs.Dialog;
 import org.osate.ui.handlers.AaxlReadOnlyHandlerAsJob;
 
 import com.jugurta.Launch;
+import com.model.exceptions.VariableValueException;
 
 public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 
@@ -50,13 +51,24 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 		}
 
 		SystemInstance si = ((ComponentInstance) obj).getSystemInstance();
+		
+			
+			
+			
+			String response;/*
+			try {
+				response = new Util().toCheddar(si);
+				Dialog.showError("ch", response);
+			} catch (VariableValueException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			*/
 		try {
-
-			Dialog.showError("Error ", new Util().Connection(si));
-			Dialog.showInfo("Components", new Util().parse(si));
-			String response = new Util().features(si);
+			Dialog.showWarning("", new Util().toCheddar(si));
+			
+			response = new Util().features(si);
 			System.out.println("The XML file is generated on the path :  " + response);
-
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
@@ -68,6 +80,9 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 		} catch (IOException e) {
 			System.err.println("Error when writing the file");
 			Dialog.showError("Error ", "Error when writing the file");
+		} catch (VariableValueException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 	}
@@ -82,7 +97,6 @@ public class CheddarLaunch extends AaxlReadOnlyHandlerAsJob {
 		String log_filename = "log.txt";
 		String path = "";
 		new Thread(new Runnable() {
-
 			@Override
 			public void run() {
 				new File(directory_name).mkdir();

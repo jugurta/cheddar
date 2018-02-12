@@ -29,16 +29,15 @@ public class Mono_Core_Processor extends Processor{
 	@Override
 	public String toXML()
 	{
-		String xml="<processors>\n";
-		xml+="<mono_core_processor id=\""+super.id+"\">\n"
+		
+		String xml="<mono_core_processor id=\""+super.id+"\">\n"
 				+"<object_type>"+ super.object_type+ "</object_type>\n"
 				+"<name>" +super.name+ "</name>\n"
 				+"<processor_type>"+Processor_Type.MONOCORE_TYPE+ "</processor_type>\n"
 				+"<migration_type>"+super.migration_type+"</migration_type>\n"
 				+"<core ref=\""+core.getId()+"\">\n"
 				+"</core>\n"
-				+"</mono_core_processor>\n" + 
-				"</processors>\n"
+				+"</mono_core_processor>\n";
 				;
 		return xml;
 	}

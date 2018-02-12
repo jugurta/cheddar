@@ -16,13 +16,13 @@ import com.model.tasks.Task;
 public class Cheddar {
 
 	private Core cores[];
-	private Processor processor;
+	private Processor[] processor;
 	private AddressSpace addressSpaces[];
 	private Task tasks[];
 	private Resource resources[];
 	private Dependency dependencies[];
 
-	public Cheddar(Core cores[], Processor processor, AddressSpace addressSpaces[], Task tasks[], Resource... resources)
+	public Cheddar(Core cores[], Processor[] processor, AddressSpace addressSpaces[], Task tasks[], Resource... resources)
 			throws VariableValueException {
 		if ((cores == null) || (processor == null) || (addressSpaces == null) || (tasks == null))
 			throw new VariableValueException("You have invalid parameters");
@@ -55,7 +55,7 @@ public class Cheddar {
 	 * @throws VariableValueException
 	 */
 	
-	public Cheddar(Core cores[], Processor processor, AddressSpace addressSpaces[], Task tasks[], Dependency dependencies[],Resource... resources)
+	public Cheddar(Core cores[], Processor processor[], AddressSpace addressSpaces[], Task tasks[], Dependency dependencies[],Resource... resources)
 			throws VariableValueException	
 	{
 		if ((cores == null) || (processor == null) || (addressSpaces == null) || (tasks == null))
@@ -89,7 +89,12 @@ public class Cheddar {
 		for (Core core : this.cores)
 			xml += core.toXML();
 		xml += "</core_units>\n";
-		xml += processor.toXML();
+		
+		
+		xml += "<processors>\n";
+		for(Processor processor:this.processor)
+			xml+=processor.toXML();
+		xml+="</processors>\n";
 
 		xml += "<address_spaces>\n";
 
