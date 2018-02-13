@@ -22,8 +22,8 @@ public class Dependency_AADL {
 	}
 
 	public Dependency toCheddarDependency(Task tasks[]) throws VariableValueException {
-		String id_Task_src = "";
-		String id_Task_sink = this.Task_sink;
+		String id_Task_src = null;
+		String id_Task_sink = null;
 		Dependency dependency = null;
 
 		for (Task task : tasks) {
@@ -32,16 +32,24 @@ public class Dependency_AADL {
 
 		}
 
-		switch (this.Timing) {
-		case "immediate":
-			dependency = new Precedence_Dependency("id_depend", "precedence_dependency", Objects_Type.DEPLOYEMENT_TYPE,
-					id_Task_sink, id_Task_src);
-			break;
+		if ((id_Task_sink != null) && (id_Task_src != null)) {
+			switch (this.Timing) {
+			case "immediate":
+				dependency = new Precedence_Dependency("id_depend", "precedence_dependency",
+						Objects_Type.DEPLOYEMENT_TYPE, id_Task_sink, id_Task_src);
+				break;
 
-		case "delayed":
-			dependency = new Time_Triggered_Communication_Dependency("id_depend_time", "time_trigered_dependency",
-					Objects_Type.CONNEXION_OBJECT_TYPE, id_Task_sink, id_Task_src, "delayed");
-			break;
+			case "delayed":
+				dependency = new Time_Triggered_Communication_Dependency("id_depend_time", "time_trigered_dependency",
+						Objects_Type.DEPLOYEMENT_TYPE, id_Task_sink, id_Task_src, "delayed");
+				break;
+
+			default:
+				dependency = new Time_Triggered_Communication_Dependency("id_depend_time", "time_trigered_dependency",
+						Objects_Type.DEPLOYEMENT_TYPE, id_Task_sink, id_Task_src, "sampled");
+				break;
+
+			}
 		}
 
 		return dependency;

@@ -119,7 +119,7 @@ public class Cheddar {
 			xml += "</resources>\n";
 		}
 		
-		if(this.dependencies!=null)
+		if((this.dependencies!=null)&&(this.dependencies.length>0))
 		if (this.dependencies.length > 0) {
 			xml += "<dependencies>\n";
 
